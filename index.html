@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>My Hemtun My Pride</title>
+  <style>
+    /* ---------- style.css (inlined) ---------- */
+
+    /* General */
+    body { margin:0; font-family:"Segoe UI",Arial,sans-serif;
+      background:linear-gradient(135deg,#fdf2f8,#e0f7fa,#fce4ec);
+      min-height:100vh; color:#333;
+    }
+    .app-title { font-size:2.2rem; text-align:center; font-weight:900;
+      letter-spacing:2px; color:#006400; margin:10px 0;
+    }
+
+    /* Login */
+    .login-screen{display:flex;align-items:center;justify-content:center;
+      height:100vh;background:url("https://www.transparenttextures.com/patterns/wood-pattern.png"),#deb887;
+      background-size:cover;flex-direction:column;}
+    .login-card{background:rgba(255,255,255,.95);padding:25px;border-radius:14px;
+      box-shadow:0 6px 18px rgba(0,0,0,.3);text-align:center;width:300px;}
+    .password-wrapper{position:relative;}
+    .password-wrapper input{width:100%;padding:10px;margin-top:10px;border-radius:8px;border:2px solid #8b5a2b;}
+    .toggle-eye{position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;font-size:1.2rem;color:#8b4513;}
+    .login-card button{margin-top:10px;width:100%;padding:10px;background:linear-gradient(135deg,#a0522d,#8b4513);
+      color:#fff;border:none;border-radius:8px;font-size:1rem;cursor:pointer;}
+    .login-card button:hover{background:linear-gradient(135deg,#cd853f,#a0522d);}
+
+    /* Header */
+    header{display:flex;justify-content:center;align-items:center;padding:8px 12px;position:relative;}
+    header .app-title{flex:1;text-align:center;}
+    .logout-btn{position:absolute;right:12px;background:crimson;color:#fff;border:none;border-radius:8px;
+      padding:8px 12px;cursor:pointer;}
+
+    /* Controls */
+    .controls{padding:10px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+    .controls input,.controls select,.controls button{padding:6px;border-radius:6px;border:1px solid #ccc;}
+    .date-controls{display:flex;flex-wrap:wrap;gap:6px;width:100%;justify-content:center;}
+    .note{width:100%;text-align:center;font-size:.85rem;font-style:italic;color:#666;}
+
+    /* Floors & rooms */
+    .floor{margin:20px;background:#fff;border-radius:14px;padding:14px;box-shadow:0 4px 12px rgba(0,0,0,.08);}
+    .floor h2{text-align:center;margin-bottom:10px;color:#b02727;}
+    .rooms-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;}
+    .room{border:2px solid #ccc;border-radius:12px;padding:12px;text-align:center;
+      background:linear-gradient(135deg,#e0f7fa,#fff3e0);box-shadow:0 3px 8px rgba(0,0,0,.1);}
+    .room-number{font-size:1.4rem;font-weight:700;}
+    .room .room-actions button{margin:4px;}
+
+    /* Dormitory beds smaller */
+    .dorm-bed{font-size:.75rem;padding:6px;border-radius:8px;background:#f0faff;
+      box-shadow:0 2px 4px rgba(0,0,0,.1);}
+    .dorm-bed .room-number{font-size:1rem;color:#0055aa;font-weight:600;}
+    /* 4 columns grid for dorm beds (browser safe) */
+    .rooms-grid.dorm-grid { grid-template-columns: repeat(4, 1fr); }
+
+    /* Booking table (compact at bottom) */
+    #bookingStatus{margin:20px;font-size:0.8rem;}
+    #bookingStatus h2{font-size:1rem;text-align:center;margin-bottom:8px;color:#444;}
+    .total-count{text-align:right;font-size:0.8rem;color:#666;margin:4px 0;}
+    #statusTable{width:100%;border-collapse:collapse;}
+    #statusTable th,#statusTable td{border:1px solid #ccc;padding:4px 6px;text-align:center;}
+    #statusTable th{background:#f5f5f5;font-size:0.85rem;}
+    #statusTable tr:nth-child(even){background:#fafafa;}
+
+    /* Export */
+    .export-buttons{text-align:center;margin:20px;}
+
+    /* Modal */
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:50;}
+    .modal-content{background:#fff;margin:8% auto;padding:20px;width:320px;border-radius:12px;position:relative;}
+    .close-btn{position:absolute;right:12px;top:8px;font-size:1.4rem;cursor:pointer;}
+
+    /* Highlights */
+    .current-booking{border:3px solid green;box-shadow:0 0 12px rgba(0,128,0,.6);}
+    .future-booking{border:3px solid orange;box-shadow:0 0 12px rgba(255,165,0,.6);}
+  </style>
+</head>
+<body>
+  <!-- 🔐 Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <h2 class="app-title">My Hemtun My Pride</h2>
+    <div class="login-card">
+      <div class="password-wrapper">
+        <input type="password" id="passwordInput" placeholder="Enter Password"/>
+        <span id="togglePassword" class="toggle-eye">👁</span>
+      </div>
+      <button id="loginBtn">Login</button>
+      <p id="loginMessage" class="error"></p>
+    </div>
+  </div>
+
+  <!-- 📖 App -->
+  <div id="app" style="display:none;">
+    <header>
+      <button onclick="logout()" class="logout-btn">Logout</button>
+      <h1 class="app-title">My Hemtun My Pride</h1>
+    </header>
+
+    <!-- Controls -->
+    <section class="controls">
+      <input type="text" id="guestName" placeholder="Guest Name"/>
+      <input type="tel" id="guestPhone" placeholder="Phone Number"/>
+      <select id="priceSelect" title="Room Price">
+        <option value="" disabled selected>Choose Price (₹)</option>
+        <option>200</option><option>300</option><option>400</option>
+        <option>500</option><option>600</option><option>700</option>
+        <option>800</option><option>900</option><option>1000</option>
+        <option>1500</option><option>2000</option><option>2500</option>
+        <option>3000</option><option>3500</option><option>4000</option>
+        <option>4500</option><option>5000</option>
+      </select>
+      <input type="number" id="advancePayment" placeholder="Advance Payment (₹)"/>
+
+      <div class="date-controls">
+        <button id="checkInBtn" type="button">Check-in Date</button>
+        <input type="number" id="checkInDay" placeholder="Day" min="1" max="31"/>
+        <select id="checkInMonth"></select>
+        <input type="number" id="checkInYear" placeholder="Year"/>
+
+        <button id="checkOutBtn" type="button">Check-out Date</button>
+        <input type="number" id="checkOutDay" placeholder="Day" min="1" max="31"/>
+        <select id="checkOutMonth"></select>
+        <input type="number" id="checkOutYear" placeholder="Year"/>
+      </div>
+
+      <p class="note">* You can book for any date range. System will block overlaps automatically.</p>
+    </section>
+
+    <!-- Rooms -->
+    <main id="roomsContainer"></main>
+
+    <!-- Export -->
+    <div class="export-buttons">
+      <button onclick="exportExcel()">Export Excel</button>
+      <button onclick="exportPDF()">Export PDF</button>
+      <button onclick="exportJPG()">Export JPG</button>
+      <button onclick="printBookings()">🖨 Print</button>
+    </div>
+
+    <!-- Booking Status Table -->
+    <section id="bookingStatus">
+      <h2>📌 Current & Future Bookings</h2>
+      <p id="totalBookings" class="total-count"></p>
+      <p id="vacantRooms" class="total-count"></p>
+      <table id="statusTable">
+        <thead>
+          <tr>
+            <th>Room/Bed</th><th>Guest</th><th>Phone</th>
+            <th>Price</th><th>Advance</th>
+            <th>Check-in</th><th>Check-out</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </div>
+
+  <!-- Update Modal -->
+  <div id="updateModal" class="modal">
+    <div class="modal-content">
+      <span class="close-btn" onclick="closeModal()">&times;</span>
+      <h2>Update Booking</h2>
+      <input type="text" id="updateGuestName" placeholder="Guest Name"/>
+      <input type="tel" id="updateGuestPhone" placeholder="Phone Number"/>
+      <select id="updatePrice">
+        <option>200</option><option>300</option><option>400</option>
+        <option>500</option><option>600</option><option>700</option>
+        <option>800</option><option>900</option><option>1000</option>
+        <option>1500</option><option>2000</option><option>2500</option>
+        <option>3000</option><option>3500</option><option>4000</option>
+        <option>4500</option><option>5000</option>
+      </select>
+      <input type="number" id="updateAdvance" placeholder="Advance Payment (₹)"/>
+      <input type="text" id="updateCheckIn" placeholder="Check-in (DD/MM/YYYY)"/>
+      <input type="text" id="updateCheckOut" placeholder="Check-out (DD/MM/YYYY)"/>
+      <button onclick="saveUpdate()">Save Changes</button>
+    </div>
+  </div>
+
+  <!-- Libraries (CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <script>
+    /***** Full script.js (inlined) *****/
+
+    /***** Global State *****/
+    // Store bookings as array to allow multiple per room
+    let bookings = JSON.parse(localStorage.getItem("bookings")) || [];
+    if (!Array.isArray(bookings)) bookings = [];
+
+    let currentUpdateId = null;
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    let filterCheckIn = null;
+    let filterCheckOut = null;
+
+    /***** Utilities *****/
+    function pad2(n){ return String(n).padStart(2,"0"); }
+    function mkDateObj(d, mIdx, y){ const date = new Date(y, mIdx, d); return isNaN(date) ? null : date; }
+    function formatDMY(d,mIdx,y){ return `${pad2(d)}/${months[mIdx]}/${y}`; }
+    function startOfDay(dt){ const d=new Date(dt); d.setHours(0,0,0,0); return d; }
+    function parseDmy(str){ if(!str) return new Date(0); const [dStr,monStr,yStr]=str.split("/"); return mkDateObj(+dStr,months.indexOf(monStr),+yStr)||new Date(0);}
+    function overlaps(aStart,aEnd,bStart,bEnd){ return !(aEnd<bStart || aStart>bEnd); }
+    function save(){ localStorage.setItem("bookings",JSON.stringify(bookings)); }
+
+    /***** Floors *****/
+    const floors={
+      "First Floor":["11A","11C","11D"], // Removed 11B
+      "Second Floor":["12A","12B","12C","12D","12E"],
+      "Third Floor":["13A","13B","13C Suite","13D Suite"],
+      "Male Dormitory":Array.from({length:12},(_,i)=>`Bed ${i+1}`),
+      "Female Dormitory":Array.from({length:12},(_,i)=>`Bed ${i+1}`)
+    };
+
+    /***** DOM Ready *****/
+    document.addEventListener("DOMContentLoaded",()=>{
+      // Login
+      const loginBtn=document.getElementById("loginBtn");
+      const pw=document.getElementById("passwordInput");
+      const msg=document.getElementById("loginMessage");
+      document.getElementById("togglePassword").addEventListener("click",()=>{
+        const isPw=pw.type==="password"; pw.type=isPw?"text":"password";
+      });
+      loginBtn.addEventListener("click",()=>{
+        if(pw.value.trim()==="bookingjunior"){
+          localStorage.setItem("loggedIn","true");
+          document.getElementById("loginScreen").style.display="none";
+          document.getElementById("app").style.display="block";
+        } else msg.textContent="Incorrect password!";
+      });
+      if(localStorage.getItem("loggedIn")==="true"){
+        document.getElementById("loginScreen").style.display="none";
+        document.getElementById("app").style.display="block";
+      }
+
+      // Month dropdowns
+      document.querySelectorAll("#checkInMonth,#checkOutMonth").forEach(sel=>{
+        months.forEach((m,i)=>{const o=document.createElement("option");o.value=i;o.textContent=m;sel.appendChild(o);});
+      });
+
+      // Autofill today/tomorrow
+      const today=new Date(),tomorrow=new Date(today);tomorrow.setDate(today.getDate()+1);
+      document.getElementById("checkInDay").value=today.getDate();
+      document.getElementById("checkInMonth").value=today.getMonth();
+      document.getElementById("checkInYear").value=today.getFullYear();
+      document.getElementById("checkOutDay").value=tomorrow.getDate();
+      document.getElementById("checkOutMonth").value=tomorrow.getMonth();
+      document.getElementById("checkOutYear").value=tomorrow.getFullYear();
+
+      ["checkInDay","checkInMonth","checkInYear","checkOutDay","checkOutMonth","checkOutYear"].forEach(id=>{
+        document.getElementById(id).addEventListener("change",()=>{
+          const ci=buildCheckInOut(); if(!ci.error){ filterCheckIn=parseDmy(ci.checkInStr); filterCheckOut=parseDmy(ci.checkOutStr); renderRooms(); renderTable();}
+        });
+      });
+
+      renderRooms(); renderTable();
+    });
+
+    /***** Render Rooms *****/
+    function renderRooms(){
+      const container=document.getElementById("roomsContainer"); container.innerHTML="";
+      const today=startOfDay(new Date());
+      for(const floor in floors){
+        const floorDiv=document.createElement("div"); floorDiv.className="floor"; floorDiv.innerHTML=`<h2>${floor}</h2>`;
+        const grid=document.createElement("div"); grid.className="rooms-grid"; if(floor.includes("Dormitory")) grid.classList.add("dorm-grid");
+        floors[floor].forEach(unit=>{
+          const card=document.createElement("div"); card.className="room"; if(floor.includes("Dormitory")) card.classList.add("dorm-bed");
+          const roomKey=`${floor}-${unit}`;
+          const roomBookings=bookings.filter(b=>b.roomKey===roomKey);
+          const winStart=(filterCheckIn&&filterCheckOut)?startOfDay(filterCheckIn):today;
+          const winEnd=(filterCheckIn&&filterCheckOut)?startOfDay(filterCheckOut):today;
+          const overlapping=roomBookings.filter(b=>overlaps(parseDmy(b.checkIn),parseDmy(b.checkOut),winStart,winEnd));
+          if(overlapping.length===0){
+            card.innerHTML=`<div class="room-number">${unit}</div><div class="room-actions"><button onclick="bookRoom('${roomKey}','${floor}')">Book</button></div>`;
+          } else {
+            const b=overlapping[0]; const inDate=parseDmy(b.checkIn), outDate=parseDmy(b.checkOut);
+            card.classList.add((inDate<=today && outDate>=today)?"current-booking":"future-booking");
+            card.innerHTML=`<div class="room-number">${unit}</div>
+              <p><strong>${b.name}</strong> (${b.phone})</p>
+              <p>₹${b.price} | Adv: ₹${b.advance}</p>
+              <p>${b.checkIn} → ${b.checkOut}</p>
+              <div class="room-actions">
+                <button onclick="openUpdateModal('${b.id}')">Update</button>
+                <button onclick="cancelBooking('${b.id}')">Cancel</button>
+              </div>`;
+          }
+          grid.appendChild(card);
+        });
+        floorDiv.appendChild(grid); container.appendChild(floorDiv);
+      }
+    }
+
+    /***** Booking *****/
+    function buildCheckInOut(){
+      const ciD=+document.getElementById("checkInDay").value, ciM=+document.getElementById("checkInMonth").value, ciY=+document.getElementById("checkInYear").value;
+      const coD=+document.getElementById("checkOutDay").value, coM=+document.getElementById("checkOutMonth").value, coY=+document.getElementById("checkOutYear").value;
+      const ciObj=mkDateObj(ciD,ciM,ciY), coObj=mkDateObj(coD,coM,coY);
+      if(!ciObj||!coObj) return {error:"Invalid date"}; if(coObj<ciObj) return {error:"Check-out must be after check-in"};
+      return {checkInStr:formatDMY(ciD,ciM,ciY), checkOutStr:formatDMY(coD,coM,coY)};
+    }
+    function bookRoom(roomKey,floorName){
+      const name=document.getElementById("guestName").value.trim(), phone=document.getElementById("guestPhone").value.trim();
+      const price=document.getElementById("priceSelect").value, advance=document.getElementById("advancePayment").value.trim()||0;
+      if(!name||!phone){alert("Please fill Guest Name and Phone.");return;}
+      if(floorName.includes("Dormitory")){ if(!price||price<200||price>1000){alert("Dorm price must be 200–1000");return;} }
+      else if(!price){alert("Select Price");return;}
+      const dates=buildCheckInOut(); if(dates.error){alert(dates.error);return;}
+      const newIn=parseDmy(dates.checkInStr), newOut=parseDmy(dates.checkOutStr);
+      if(bookings.some(b=>b.roomKey===roomKey && overlaps(parseDmy(b.checkIn),parseDmy(b.checkOut),newIn,newOut))){alert("Not available for these dates");return;}
+      bookings.push({id:"b_"+Date.now(), roomKey,name,phone,price,advance,checkIn:dates.checkInStr,checkOut:dates.checkOutStr});
+      save(); renderRooms(); renderTable();
+    }
+
+    /***** Update / Cancel *****/
+    function openUpdateModal(id){ currentUpdateId=id; const b=bookings.find(x=>x.id===id); if(!b)return;
+      document.getElementById("updateGuestName").value=b.name;
+      document.getElementById("updateGuestPhone").value=b.phone;
+      document.getElementById("updatePrice").value=b.price;
+      document.getElementById("updateAdvance").value=b.advance;
+      document.getElementById("updateCheckIn").value=b.checkIn;
+      document.getElementById("updateCheckOut").value=b.checkOut;
+      document.getElementById("updateModal").style.display="block";
+    }
+    function closeModal(){document.getElementById("updateModal").style.display="none";}
+    function saveUpdate(){
+      const id=currentUpdateId, idx=bookings.findIndex(x=>x.id===id); if(idx===-1)return;
+      const b=bookings[idx];
+      const upd={...b,
+        name:document.getElementById("updateGuestName").value.trim(),
+        phone:document.getElementById("updateGuestPhone").value.trim(),
+        price:document.getElementById("updatePrice").value,
+        advance:document.getElementById("updateAdvance").value.trim()||0,
+        checkIn:document.getElementById("updateCheckIn").value.trim(),
+        checkOut:document.getElementById("updateCheckOut").value.trim()};
+      const newIn=parseDmy(upd.checkIn), newOut=parseDmy(upd.checkOut);
+      if(newOut<newIn){alert("Check-out must be after check-in");return;}
+      if(bookings.some(x=>x.roomKey===b.roomKey && x.id!==id && overlaps(parseDmy(x.checkIn),parseDmy(x.checkOut),newIn,newOut))){alert("Conflict with another booking");return;}
+      bookings[idx]=upd; save(); closeModal(); renderRooms(); renderTable();
+    }
+    function cancelBooking(id){ if(confirm("Cancel this booking?")){ bookings=bookings.filter(b=>b.id!==id); save(); renderRooms(); renderTable(); }}
+
+    /***** Status Table *****/
+    function renderTable(){
+      const tbody=document.querySelector("#statusTable tbody"); tbody.innerHTML="";
+      const today=startOfDay(new Date());
+      const rows=bookings.filter(b=>parseDmy(b.checkOut)>=today).sort((a,b)=>parseDmy(a.checkIn)-parseDmy(b.checkIn));
+      rows.forEach(b=>{const tr=document.createElement("tr"); tr.innerHTML=`<td>${b.roomKey}</td><td>${b.name}</td><td>${b.phone}</td><td>₹${b.price}</td><td>₹${b.advance}</td><td>${b.checkIn}</td><td>${b.checkOut}</td>`; tbody.appendChild(tr);});
+      let roomCount=0,dormCount=0; rows.forEach(b=>b.roomKey.includes("Dormitory")?dormCount++:roomCount++);
+      document.getElementById("totalBookings").textContent=`Total Bookings: ${rows.length} (Rooms: ${roomCount}, Dorm Beds: ${dormCount})`;
+      let totalUnits=0,occupiedUnits=0; const winStart=(filterCheckIn&&filterCheckOut)?startOfDay(filterCheckIn):today; const winEnd=(filterCheckIn&&filterCheckOut)?startOfDay(filterCheckOut):today;
+      for(const floor in floors){ totalUnits+=floors[floor].length; floors[floor].forEach(unit=>{const key=`${floor}-${unit}`; if(bookings.some(b=>b.roomKey===key && overlaps(parseDmy(b.checkIn),parseDmy(b.checkOut),winStart,winEnd))) occupiedUnits++; });}
+      document.getElementById("vacantRooms").textContent=`Vacant: ${totalUnits-occupiedUnits} / ${totalUnits}`;
+    }
+
+    /***** Export & Print *****/
+    function exportExcel(){
+      const data=[["Room/Bed","Guest","Phone","Price","Advance","Check-in","Check-out"]];
+      bookings.forEach(b=>data.push([b.roomKey,b.name,b.phone,b.price,b.advance,b.checkIn,b.checkOut]));
+      const ws=XLSX.utils.aoa_to_sheet(data),wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb,ws,"Bookings");
+      XLSX.writeFile(wb,"bookings.xlsx");
+    }
+    function exportPDF(){
+      const {jsPDF}=window.jspdf; const doc=new jsPDF();
+      doc.text("My Hemtun My Pride - Bookings",20,20);
+      let y=30;
+      bookings.forEach(b=>{
+        doc.text(`${b.roomKey} - ${b.name} (${b.phone}) ₹${b.price} Adv: ₹${b.advance} ${b.checkIn} → ${b.checkOut}`,20,y);
+        y+=10; if(y>280){doc.addPage();y=20;}
+      });
+      doc.save("bookings.pdf");
+    }
+    function exportJPG(){
+      html2canvas(document.getElementById("roomsContainer")).then(c=>{
+        const link=document.createElement("a");
+        link.download="bookings.jpg";
+        link.href=c.toDataURL("image/jpeg");
+        link.click();
+      });
+    }
+    function printBookings(){
+      let content=`<h2>My Hemtun My Pride - Bookings</h2><table border="1" cellspacing="0" cellpadding="5"><tr><th>Room/Bed</th><th>Guest</th><th>Phone</th><th>Price</th><th>Advance</th><th>Check-in</th><th>Check-out</th></tr>`;
+      bookings.forEach(b=>{content+=`<tr><td>${b.roomKey}</td><td>${b.name}</td><td>${b.phone}</td><td>₹${b.price}</td><td>₹${b.advance}</td><td>${b.checkIn}</td><td>${b.checkOut}</td></tr>`;});
+      content+="</table>";
+      const win=window.open("","_blank"); win.document.write(`<html><head><title>Print Bookings</title></head><body>${content}</body></html>`); win.document.close(); win.print();
+    }
+
+    /***** Logout *****/
+    function logout(){ localStorage.removeItem("loggedIn"); document.getElementById("app").style.display="none"; document.getElementById("loginScreen").style.display="flex"; document.getElementById("passwordInput").value=""; }
+
+  </script>
+</body>
+</html>
